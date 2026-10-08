@@ -1,3 +1,5 @@
+Categoría: Casos de Uso Empresariales | Centro de Excelencia CX (Telecomunicaciones)
+
 # Executive Operations & BI Analytics Dashboard (R&D-I)
 
 ![Power BI](https://img.shields.io/badge/Power%20BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)
