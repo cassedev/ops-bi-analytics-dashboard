@@ -10,6 +10,7 @@ Categoría: Casos de Uso Empresariales | Centro de Excelencia CX (Telecomunicaci
 
 > **Tablero de control analítico y seguimiento operativo para la gestión de solicitudes de Research, Diseño e Implementación (R&D-I). Modelo analítico construido en Power BI a partir de una lista única en Microsoft Lists / SharePoint Online, incorporando tabla de calendario autónoma y medidas DAX para la medición de SLAs, tiempos de resolución (MTTR) y demanda por segmento.**
 
+[![Demo en Vivo](https://img.shields.io/badge/Demo%20Interactiva-GitHub%20Pages-amber?style=for-the-badge)](https://cassedev.github.io/ops-bi-analytics-dashboard/)
 ---
 
 ## 📌 Contexto y Arquitectura de Datos
