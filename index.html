@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive Operations & BI Analytics Dashboard - R&D-I</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- ENCABEZADO ESTILO POWER BI -->
+  <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-amber-500 rounded text-slate-950 font-black text-xs tracking-wider flex items-center justify-center">
+          PBI
+        </div>
+        <div>
+          <h1 class="text-sm font-semibold text-white leading-tight">Panel Ejecutivo de Gestión: Research, Diseño e Implementación</h1>
+          <p class="text-xs text-slate-400">Modelo Star Schema &bull; Ingesta nativa desde Microsoft Lists &bull; Actualización programada</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium">
+          <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Conexión en Vivo: Microsoft Lists
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- BARRA DE FILTROS Y SEGMENTACIÓN -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+      <div class="flex flex-wrap items-center gap-3 text-xs w-full sm:w-auto">
+        <span class="font-bold uppercase tracking-wider text-amber-400 text-[11px] flex items-center gap-1.5">
+          <span>⚡</span> Segmentadores:
+        </span>
+        
+        <div>
+          <select id="filter-segment" onchange="applyFilters()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-200 outline-none focus:border-amber-500 transition">
+            <option value="ALL">Segmento: Todos (B2B &amp; B2C)</option>
+            <option value="B2B">Segmento B2B (Corporativo)</option>
+            <option value="B2C">Segmento B2C (Masivo)</option>
+          </select>
+        </div>
+
+        <div>
+          <select id="filter-service" onchange="applyFilters()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-200 outline-none focus:border-amber-500 transition">
+            <option value="ALL">Servicio: Todos</option>
+            <option value="Research">Research</option>
+            <option value="Diseño">Diseño</option>
+            <option value="Implementación">Implementación</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 mono">
+        Requerimientos filtrados: <span id="filtered-count" class="text-amber-400 font-bold">120</span> <span class="text-slate-600">/ 120</span>
+      </div>
+    </section>
+
+    <!-- TARJETAS DE KPIS PRINCIPALES -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      
+      <!-- Total Histórico -->
+      <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-3.5 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-blue-500"></div>
+        <span class="text-[11px] text-slate-400 font-medium block">Total Solicitudes</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="kpi-total" class="text-2xl font-bold text-white">120</span>
+          <span class="text-[10px] text-blue-400 mono">+12% MoM</span>
+        </div>
+        <span class="text-[10px] text-slate-500 mt-1 block">Ingresadas vía Forms</span>
+      </div>
+
+      <!-- SLA % -->
+      <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-3.5 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-emerald-500"></div>
+        <span class="text-[11px] text-slate-400 font-medium block">Cumplimiento de SLA</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="kpi-sla" class="text-2xl font-bold text-emerald-400">92.5%</span>
+          <span class="text-[10px] text-emerald-400 mono">Meta: ≥ 90%</span>
+        </div>
+        <span class="text-[10px] text-slate-500 mt-1 block">Entregas dentro del plazo</span>
+      </div>
+
+      <!-- MTTR -->
+      <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-3.5 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-amber-500"></div>
+        <span class="text-[11px] text-slate-400 font-medium block">Tiempo Medio Ciclo</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="kpi-mttr" class="text-2xl font-bold text-amber-400">3.8 d</span>
+          <span class="text-[10px] text-amber-400 mono">-0.4 d vs ant.</span>
+        </div>
+        <span class="text-[10px] text-slate-500 mt-1 block">Aprobación hasta cierre</span>
+      </div>
+
+      <!-- Bloqueadas -->
+      <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-3.5 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-rose-500"></div>
+        <span class="text-[11px] text-slate-400 font-medium block">Tasa Bloqueadas</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="kpi-blocked" class="text-2xl font-bold text-rose-400">5.8%</span>
+          <span class="text-[10px] text-rose-400 mono">7 casos</span>
+        </div>
+        <span class="text-[10px] text-slate-500 mt-1 block">Dependencias externas</span>
+      </div>
+
+      <!-- Activas -->
+      <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-3.5 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-cyan-500"></div>
+        <span class="text-[11px] text-slate-400 font-medium block">Carga Activa</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="kpi-active" class="text-2xl font-bold text-cyan-400">34</span>
+          <span class="text-[10px] text-cyan-400 mono">Backlog + Curso</span>
+        </div>
+        <span class="text-[10px] text-slate-500 mt-1 block">Capacidad en curso</span>
+      </div>
+
+    </section>
+
+    <!-- GRÁFICOS Y ANÁLISIS DE NEGOCIO -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      
+      <!-- HISTÓRICO Y TENDENCIA TEMPORAL -->
+      <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Tendencia Histórica: Ingesta vs Resoluciones</h2>
+            <p class="text-xs text-slate-400">Evolución mensual consolidada mediante tabla de calendario</p>
+          </div>
+          <span class="text-[11px] text-amber-400 mono font-semibold">Mensual</span>
+        </div>
+        <div class="h-60 relative">
+          <canvas id="chart-trend"></canvas>
+        </div>
+      </div>
+
+      <!-- DISTRIBUCIÓN POR SEGMENTO -->
+      <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Demanda por Segmento</h2>
+            <p class="text-xs text-slate-400">Distribución de carga B2B vs B2C</p>
+          </div>
+          <span class="text-[11px] text-slate-500 mono">Donut</span>
+        </div>
+        <div class="h-60 relative flex items-center justify-center">
+          <canvas id="chart-segments"></canvas>
+        </div>
+      </div>
+
+      <!-- VOLUMEN POR SERVICIO Y ESTADO -->
+      <div class="lg:col-span-12 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Distribución de Estados por Servicio</h2>
+            <p class="text-xs text-slate-400">Research, Diseño e Implementación clasificados por avance operativo</p>
+          </div>
+          <span class="text-[11px] text-slate-500 mono">Barras Apiladas</span>
+        </div>
+        <div class="h-60 relative">
+          <canvas id="chart-services"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ARQUITECTURA TÉCNICA: MODELADO DAX & TABLA CALENDARIO -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+      <div class="border-b border-slate-800 pb-3 flex flex-wrap justify-between items-center gap-2">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <span>📐</span> Modelado Analítico: Medidas DAX y Tabla Calendario
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Todas las fórmulas utilizadas en las tarjetas y visualizaciones explicadas paso a paso.</p>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs">
+          <button onclick="switchTab('dax')" id="tab-btn-dax" class="px-3 py-1 bg-amber-500 text-slate-950 font-bold rounded-md transition">Todas las Medidas DAX (5)</button>
+          <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="px-3 py-1 bg-slate-800 text-slate-400 font-semibold rounded-md hover:text-white transition">Tabla Calendario (DAX)</button>
+          <button onclick="switchTab('sql')" id="tab-btn-sql" class="px-3 py-1 bg-slate-800 text-slate-400 font-semibold rounded-md hover:text-white transition">Consultas SQL</button>
+        </div>
+      </div>
+
+      <!-- PESTAÑA: TODAS LAS MEDIDAS DAX EXPLICADAS -->
+      <div id="view-dax" class="bg-slate-950 rounded-lg p-4 border border-slate-800/80 mono text-xs text-slate-300 space-y-4 overflow-x-auto max-h-96 overflow-y-auto">
+        
+        <div>
+          <p class="text-slate-500">// 1. TARJETA: TOTAL HISTÓRICO Y CRECIMIENTO MENSUAL (MoM)</p>
+          <p class="text-slate-400">Calcula el volumen total y la variación porcentual con respecto al mes anterior usando inteligencia temporal:</p>
+          <p class="mt-1"><span class="text-amber-400 font-bold">Total Solicitudes</span> = COUNTROWS('Fact_Solicitudes_Lists')</p>
+          <p class="mt-1"><span class="text-amber-400 font-bold">Solicitudes MoM %</span> = <br>
+          VAR MesActual = [Total Solicitudes]<br>
+          VAR MesAnterior = CALCULATE([Total Solicitudes], DATEADD('Dim_Calendario'[Date], -1, MONTH))<br>
+          RETURN<br>
+          DIVIDE(MesActual - MesAnterior, MesAnterior, 0)</p>
+        </div>
+
+        <div class="pt-2 border-t border-slate-900">
+          <p class="text-slate-500">// 2. TARJETA: CUMPLIMIENTO GLOBAL DE SLA (%)</p>
+          <p class="text-slate-400">Porcentaje de tickets completados dentro del tiempo límite estipulado:</p>
+          <p class="mt-1"><span class="text-amber-400 font-bold">SLA Compliance %</span> = <br>
+          DIVIDE(<br>
+          &nbsp;&nbsp;CALCULATE([Total Solicitudes], 'Fact_Solicitudes_Lists'[Cumple_SLA] = TRUE(), 'Fact_Solicitudes_Lists'[Estado] = "Completada"),<br>
+          &nbsp;&nbsp;CALCULATE([Total Solicitudes], 'Fact_Solicitudes_Lists'[Estado] = "Completada"),<br>
+          &nbsp;&nbsp;0<br>
+          )</p>
+        </div>
+
+        <div class="pt-2 border-t border-slate-900">
+          <p class="text-slate-500">// 3. TARJETA: TIEMPO MEDIO DE RESOLUCIÓN (MTTR EN DÍAS)</p>
+          <p class="text-slate-400">Promedio de días transcurridos desde que se aprueba el requerimiento en Lists hasta su cierre efectivo:</p>
+          <p class="mt-1"><span class="text-amber-400 font-bold">MTTR (Dias)</span> = <br>
+          AVERAGEX(<br>
+          &nbsp;&nbsp;FILTER('Fact_Solicitudes_Lists', NOT(ISBLANK('Fact_Solicitudes_Lists'[Fecha_Cierre]))),<br>
+          &nbsp;&nbsp;DATEDIFF('Fact_Solicitudes_Lists'[Fecha_Aprobacion], 'Fact_Solicitudes_Lists'[Fecha_Cierre], DAY)<br>
+          )</p>
+        </div>
+
+        <div class="pt-2 border-t border-slate-900">
+          <p class="text-slate-500">// 4. TARJETA: TASA DE SOLICITUDES BLOQUEADAS (%)</p>
+          <p class="text-slate-400">Mide el cuello de botella: porcentaje de solicitudes detenidas por dependencias sobre el volumen total:</p>
+          <p class="mt-1"><span class="text-amber-400 font-bold">Blocked Rate %</span> = <br>
+          DIVIDE(<br>
+          &nbsp;&nbsp;CALCULATE([Total Solicitudes], 'Fact_Solicitudes_Lists'[Estado] = "Bloqueada"),<br>
+          &nbsp;&nbsp;[Total Solicitudes],<br>
+          &nbsp;&nbsp;0<br>
+          )</p>
+        </div>
+
+        <div class="pt-2 border-t border-slate-900">
+          <p class="text-slate-500">// 5. TARJETA: CARGA ACTIVA EN CURSO (WORK IN PROGRESS)</p>
+          <p class="text-slate-400">Volumen neto de trabajo que está consumiendo capacidad de los equipos actualmente:</p>
+          <p class="mt-1"><span class="text-amber-400 font-bold">Active Workload</span> = <br>
+          CALCULATE(<br>
+          &nbsp;&nbsp;[Total Solicitudes],<br>
+          &nbsp;&nbsp;'Fact_Solicitudes_Lists'[Estado] IN { "Backlog", "En Curso" }<br>
+          )</p>
+        </div>
+
+      </div>
+
+      <!-- PESTAÑA: TABLA CALENDARIO -->
+      <div id="view-calendar" class="hidden bg-slate-950 rounded-lg p-4 border border-slate-800/80 mono text-xs text-slate-300 space-y-3 overflow-x-auto">
+        <p class="text-slate-500">// Generación de Dim_Calendario para series de tiempo, inteligencia temporal y gráficos de evolución</p>
+        <p><span class="text-amber-400 font-bold">Dim_Calendario</span> = <br>
+        VAR MinDate = MIN('Fact_Solicitudes_Lists'[Fecha_Ingreso])<br>
+        VAR MaxDate = TODAY()<br>
+        RETURN<br>
+        ADDCOLUMNS(<br>
+        &nbsp;&nbsp;CALENDAR(MinDate, MaxDate),<br>
+        &nbsp;&nbsp;"Año", YEAR([Date]),<br>
+        &nbsp;&nbsp;"Mes_Nro", MONTH([Date]),<br>
+        &nbsp;&nbsp;"Mes_Nombre", FORMAT([Date], "MMMM"),<br>
+        &nbsp;&nbsp;"Año_Mes", FORMAT([Date], "YYYY-MM"),<br>
+        &nbsp;&nbsp;"Trimestre", "T" &amp; FORMAT([Date], "Q")<br>
+        )</p>
+        <p class="text-slate-400 text-[11px] leading-relaxed">
+          * Buena práctica: Se marca formalmente como <em>"Tabla de Fechas"</em> (Mark as Date Table) para habilitar funciones DAX como <code>DATEADD</code> y <code>SAMEPERIODLASTYEAR</code>.
+        </p>
+      </div>
+
+      <!-- PESTAÑA: SQL -->
+      <div id="view-sql" class="hidden bg-slate-950 rounded-lg p-4 border border-slate-800/80 mono text-xs text-slate-300 space-y-3 overflow-x-auto">
+        <p class="text-slate-500">-- Extracción analítica y cálculo de cumplimiento de SLA en motor relacional</p>
+        <p><span class="text-blue-400 font-bold">SELECT</span> <br>
+        &nbsp;&nbsp;s.servicio,<br>
+        &nbsp;&nbsp;s.segmento,<br>
+        &nbsp;&nbsp;COUNT(s.ticket_id) AS total_solicitudes,<br>
+        &nbsp;&nbsp;ROUND(AVG(DATEDIFF(day, s.fecha_aprobacion, s.fecha_cierre)), 1) AS mttr_dias,<br>
+        &nbsp;&nbsp;ROUND(100.0 * SUM(CASE WHEN s.cumple_sla = 1 THEN 1 ELSE 0 END) / NULLIF(COUNT(s.ticket_id), 0), 2) AS pct_sla_compliance<br>
+        <span class="text-blue-400 font-bold">FROM</span> fact_solicitudes_lists s<br>
+        <span class="text-blue-400 font-bold">WHERE</span> s.estado = 'Completada'<br>
+        <span class="text-blue-400 font-bold">GROUP BY</span> s.servicio, s.segmento<br>
+        <span class="text-blue-400 font-bold">ORDER BY</span> total_solicitudes DESC;</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // DATASET MAESTRO (SIMULACIÓN DE 120 TICKETS SINCRONIZADOS DE LISTS)
+    const baseRecords = [
+      { id: 1, service: "Research", segment: "B2B", status: "Completada", sla: true, days: 3 },
+      { id: 2, service: "Research", segment: "B2B", status: "Completada", sla: true, days: 2 },
+      { id: 3, service: "Research", segment: "B2B", status: "En Curso", sla: true, days: 4 },
+      { id: 4, service: "Research", segment: "B2B", status: "Backlog", sla: true, days: 0 },
+      { id: 5, service: "Research", segment: "B2C", status: "Completada", sla: true, days: 3 },
+      { id: 6, service: "Research", segment: "B2C", status: "Bloqueada", sla: false, days: 6 },
+      { id: 7, service: "Diseño", segment: "B2B", status: "Completada", sla: true, days: 4 },
+      { id: 8, service: "Diseño", segment: "B2B", status: "Completada", sla: false, days: 7 },
+      { id: 9, service: "Diseño", segment: "B2B", status: "En Curso", sla: true, days: 3 },
+      { id: 10, service: "Diseño", segment: "B2C", status: "Completada", sla: true, days: 4 },
+      { id: 11, service: "Diseño", segment: "B2C", status: "En Curso", sla: true, days: 2 },
+      { id: 12, service: "Diseño", segment: "B2C", status: "Backlog", sla: true, days: 0 },
+      { id: 13, service: "Implementación", segment: "B2B", status: "Completada", sla: true, days: 5 },
+      { id: 14, service: "Implementación", segment: "B2B", status: "Completada", sla: true, days: 4 },
+      { id: 15, service: "Implementación", segment: "B2B", status: "En Curso", sla: true, days: 5 },
+      { id: 16, service: "Implementación", segment: "B2B", status: "Bloqueada", sla: false, days: 9 },
+      { id: 17, service: "Implementación", segment: "B2C", status: "Completada", sla: true, days: 3 },
+      { id: 18, service: "Implementación", segment: "B2C", status: "Completada", sla: true, days: 4 },
+      { id: 19, service: "Implementación", segment: "B2C", status: "En Curso", sla: true, days: 2 },
+      { id: 20, service: "Implementación", segment: "B2C", status: "Backlog", sla: true, days: 0 }
+    ];
+
+    let dataset = [];
+    for (let i = 0; i < 6; i++) {
+      baseRecords.forEach(d => dataset.push({ ...d, id: dataset.length + 1 }));
+    }
+
+    let chartServices = null;
+    let chartSegments = null;
+    let chartTrend = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      applyFilters();
+    });
+
+    function applyFilters() {
+      const segFilter = document.getElementById('filter-segment').value;
+      const srvFilter = document.getElementById('filter-service').value;
+
+      const filtered = dataset.filter(d => {
+        const segMatch = segFilter === "ALL" || d.segment === segFilter;
+        const srvMatch = srvFilter === "ALL" || d.service === srvFilter;
+        return segMatch && srvMatch;
+      });
+
+      document.getElementById('filtered-count').textContent = filtered.length;
+      document.getElementById('kpi-total').textContent = filtered.length;
+
+      // Cálculo de Métricas en JavaScript (equivalente a las medidas DAX)
+      const completed = filtered.filter(d => d.status === "Completada");
+      const slaOnTime = completed.filter(d => d.sla).length;
+      const slaRate = completed.length > 0 ? ((slaOnTime / completed.length) * 100).toFixed(1) : 0;
+      document.getElementById('kpi-sla').textContent = `${slaRate}%`;
+
+      const avgDays = completed.length > 0 ? (completed.reduce((a, b) => a + b.days, 0) / completed.length).toFixed(1) : 0;
+      document.getElementById('kpi-mttr').textContent = `${avgDays} d`;
+
+      const blockedCount = filtered.filter(d => d.status === "Bloqueada").length;
+      const blockedRate = filtered.length > 0 ? ((blockedCount / filtered.length) * 100).toFixed(1) : 0;
+      document.getElementById('kpi-blocked').textContent = `${blockedRate}%`;
+
+      const activeCount = filtered.filter(d => d.status === "En Curso" || d.status === "Backlog").length;
+      document.getElementById('kpi-active').textContent = activeCount;
+
+      updateCharts(filtered);
+    }
+
+    function initCharts() {
+      // 1. Gráfico de Tendencia Temporal (Área / Línea)
+      const ctxTrend = document.getElementById('chart-trend').getContext('2d');
+      chartTrend = new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+          datasets: [
+            {
+              label: 'Solicitudes Nuevas',
+              data: [14, 18, 22, 19, 25, 22],
+              borderColor: '#38bdf8',
+              backgroundColor: 'rgba(56, 189, 248, 0.1)',
+              fill: true,
+              tension: 0.35
+            },
+            {
+              label: 'Resueltas a Tiempo (SLA)',
+              data: [12, 17, 20, 18, 23, 20],
+              borderColor: '#10b981',
+              backgroundColor: 'transparent',
+              borderDash: [4, 4],
+              tension: 0.35
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+          },
+          plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+          }
+        }
+      });
+
+      // 2. Gráfico Donut de Segmentos
+      const ctxSegments = document.getElementById('chart-segments').getContext('2d');
+      chartSegments = new Chart(ctxSegments, {
+        type: 'doughnut',
+        data: {
+          labels: ['B2B (Corporativo)', 'B2C (Masivo)'],
+          datasets: [{
+            data: [0, 0],
+            backgroundColor: ['#f59e0b', '#06b6d4'],
+            borderColor: '#0f172a',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 11 } } }
+          }
+        }
+      });
+
+      // 3. Gráfico de Barras Apiladas por Servicio
+      const ctxServices = document.getElementById('chart-services').getContext('2d');
+      chartServices = new Chart(ctxServices, {
+        type: 'bar',
+        data: {
+          labels: ['Research', 'Diseño', 'Implementación'],
+          datasets: [
+            { label: 'Completadas', data: [0, 0, 0], backgroundColor: '#10b981' },
+            { label: 'En Curso', data: [0, 0, 0], backgroundColor: '#3b82f6' },
+            { label: 'Backlog', data: [0, 0, 0], backgroundColor: '#64748b' },
+            { label: 'Bloqueadas', data: [0, 0, 0], backgroundColor: '#f43f5e' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+            y: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+          },
+          plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    function updateCharts(data) {
+      // Donut Segments
+      const b2bCount = data.filter(d => d.segment === "B2B").length;
+      const b2cCount = data.filter(d => d.segment === "B2C").length;
+      chartSegments.data.datasets[0].data = [b2bCount, b2cCount];
+      chartSegments.update();
+
+      // Stacked Bar Services
+      const services = ['Research', 'Diseño', 'Implementación'];
+      const statuses = ['Completada', 'En Curso', 'Backlog', 'Bloqueada'];
+
+      const serviceData = statuses.map(status => {
+        return services.map(service => {
+          return data.filter(d => d.service === service && d.status === status).length;
+        });
+      });
+
+      chartServices.data.datasets.forEach((ds, idx) => {
+        ds.data = serviceData[idx];
+      });
+      chartServices.update();
+    }
+
+    function switchTab(tab) {
+      const views = ['dax', 'calendar', 'sql'];
+      views.forEach(v => {
+        document.getElementById(`view-${v}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-btn-${v}`);
+        btn.className = "px-3 py-1 bg-slate-800 text-slate-400 font-semibold rounded-md hover:text-white transition";
+      });
+
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-btn-${tab}`);
+      activeBtn.className = "px-3 py-1 bg-amber-500 text-slate-950 font-bold rounded-md transition";
+    }
+  </script>
+</body>
+</html>
