@@ -288,6 +288,39 @@
 
   </main>
 
+  <!-- ========================================== -->
+  <!-- INSIGNIA FLOTANTE DE AUTORÍA & CONTACTO    -->
+  <!-- ========================================== -->
+  <aside class="fixed bottom-3 right-3 z-50 pointer-events-auto select-none print:hidden">
+    <div class="flex items-center gap-1.5 p-1 rounded-full bg-slate-900/90 text-slate-300 border border-slate-700/80 shadow-2xl backdrop-blur-md text-[11px] font-sans">
+      
+      <!-- IDENTIFICACIÓN / NOMBRE -->
+      <div class="flex items-center gap-2 pl-2.5 pr-1.5 py-0.5">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-slate-400">Desarrollado por</span>
+        <strong class="font-semibold text-white">Claudio Cassero</strong>
+      </div>
+
+      <!-- ENLACE GITHUB -->
+      <a href="https://github.com/cassedev/" target="_blank" rel="noopener noreferrer" 
+         class="px-2 py-0.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-purple-300 hover:text-white border border-slate-700/60 transition-colors flex items-center gap-1"
+         title="Ver perfil de GitHub">
+        <span>@cassedev</span>
+        <span class="text-[9px] text-slate-500">↗</span>
+      </a>
+
+      <!-- ENLACE LINKEDIN -->
+      <a href="https://www.linkedin.com/in/claudio-cassero/" target="_blank" rel="noopener noreferrer" 
+         class="px-2.5 py-0.5 rounded-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 hover:text-white border border-blue-500/30 transition-colors flex items-center gap-1 font-medium"
+         title="Ver perfil de LinkedIn">
+        <span class="font-bold">in</span>
+        <span>LinkedIn</span>
+        <span class="text-[9px] text-blue-400">↗</span>
+      </a>
+
+    </div>
+  </aside>
+
   <script>
     // DATASET MAESTRO (SIMULACIÓN DE 120 TICKETS SINCRONIZADOS DE LISTS)
     const baseRecords = [
